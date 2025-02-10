@@ -11,7 +11,6 @@ const App = () => {
   const mapRef = useRef(null);
   const [, setSelectedBalai] = useState(null);
 
-  // Menggunakan useCallback untuk menghindari re-render berulang
   const fetchBalaiData = useCallback(async () => {
     try {
       const response = await getBalai();
@@ -45,12 +44,80 @@ const App = () => {
     });
 
     mapRef.current.on("load", () => {
-      fetchBalaiData();
       fetchBalaiInfo();
+      fetchBalaiData();
     });
 
     return () => mapRef.current.remove();
-  }, [fetchBalaiData, fetchBalaiInfo]); // Memasukkan dependensi yang diperlukan
+  }, [fetchBalaiInfo, fetchBalaiData]);
+
+  const addBalaiInfoLayer = (geojsonData) => {
+    const map = mapRef.current;
+
+    if (!map || !geojsonData) return;
+
+    map.addSource("balai-info", {
+      type: "geojson",
+      data: geojsonData,
+    });
+
+    map.addLayer({
+      id: "balai-info-layer",
+      type: "circle",
+      source: "balai-info",
+      paint: {
+        "circle-radius": 8,
+        "circle-color": "#ff6200",
+        "circle-stroke-width": 1,
+        "circle-stroke-color": "#fff",
+      },
+    });
+
+    map.on("click", "balai-info-layer", (e) => {
+      const balaiId = e.features[0].properties.id_balai;
+      setSelectedBalai(balaiId);
+
+      const uniqueBalaiIds = Array.from(
+        new Set(
+          geojsonData.features.map((feature) => feature.properties.id_balai)
+        )
+      );
+
+      const uniqueBalaiIdsFiltered = uniqueBalaiIds.filter(
+        (id) => id !== balaiId
+      );
+      const colorMapping = uniqueBalaiIdsFiltered.flatMap((id) => [
+        id,
+        generateColor(id),
+      ]);
+
+      // perbarui warna area balai dengan filter id
+      map.setPaintProperty("balai-layer", "fill-color", [
+        "match",
+        ["get", "id_balai"],
+        balaiId,
+        "#ff0000",
+        ...colorMapping,
+        "#cccccc",
+      ]);
+
+      new maplibregl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(
+          `<h3 style="margin: 0; font-size: 16px;">Peringatan</h3>
+          <p style="margin: 5px 0;">Anda telah memilih balai dengan ID: <strong>${balaiId}</strong></p>`
+        )
+        .addTo(map);
+    });
+
+    map.on("mouseenter", "balai-info-layer", () => {
+      map.getCanvas().style.cursor = "pointer";
+    });
+
+    map.on("mouseleave", "balai-info-layer", () => {
+      map.getCanvas().style.cursor = "";
+    });
+  };
 
   const addBalaiLayer = (geojsonData) => {
     const map = mapRef.current;
@@ -79,7 +146,7 @@ const App = () => {
           ...uniqueBalaiIds.flatMap((id) => [id, generateColor(id)]),
           "#cccccc",
         ],
-        "fill-opacity": 0.6,
+        "fill-opacity": 0.6, //0.6
       },
     });
 
@@ -91,66 +158,6 @@ const App = () => {
         "line-color": "#000",
         "line-width": 1,
       },
-    });
-  };
-
-  const addBalaiInfoLayer = (geojsonData) => {
-    const map = mapRef.current;
-
-    if (!map || !geojsonData) return;
-
-    map.addSource("balai-info", {
-      type: "geojson",
-      data: geojsonData,
-    });
-
-    map.addLayer({
-      id: "balai-info-layer",
-      type: "circle",
-      source: "balai-info",
-      paint: {
-        "circle-radius": 8,
-        "circle-color": "#ff0000",
-        "circle-stroke-width": 2,
-        "circle-stroke-color": "#fff",
-      },
-    });
-
-    map.on("click", "balai-info-layer", (e) => {
-      const balaiId = e.features[0].properties.id_balai;
-      setSelectedBalai(balaiId);
-
-      const uniqueBalaiIds = Array.from(
-        new Set(
-          geojsonData.features.map((feature) => feature.properties.id_balai)
-        )
-      );
-
-      // Perbarui warna area balai dengan filter unik
-      map.setPaintProperty("balai-layer", "fill-color", [
-        "match",
-        ["get", "id_balai"],
-        balaiId,
-        "#ff0000",
-        ...uniqueBalaiIds.flatMap((id) => [id, generateColor(id)]),
-        "#cccccc",
-      ]);
-
-      new maplibregl.Popup()
-        .setLngLat(e.lngLat)
-        .setHTML(
-          `<h3 style="margin: 0; font-size: 16px;">Peringatan</h3>
-          <p style="margin: 5px 0;">Anda telah memilih balai dengan ID: <strong>${balaiId}</strong></p>`
-        )
-        .addTo(map);
-    });
-
-    map.on("mouseenter", "balai-info-layer", () => {
-      map.getCanvas().style.cursor = "pointer";
-    });
-
-    map.on("mouseleave", "balai-info-layer", () => {
-      map.getCanvas().style.cursor = "";
     });
   };
 

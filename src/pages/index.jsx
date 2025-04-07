@@ -2,7 +2,6 @@ import { useEffect, useRef, useState, useCallback } from "react";
 
 import { getBalai, getBalaiInfo } from "../utils/apis/api";
 import generateColor from "../utils/formater/generateColor";
-// import { locationSurvey } from "/public/location_survey.svg";
 
 import "maplibre-gl/dist/maplibre-gl.css";
 import maplibregl from "maplibre-gl";
@@ -15,11 +14,12 @@ const App = () => {
   const fetchBalaiInfo = useCallback(async () => {
     try {
       const response = await getBalaiInfo();
+
       if (response && response.features) {
         addBalaiInfoLayer(response);
       }
     } catch (error) {
-      console.error("Error fetching Balai info:", error);
+      console.error("Upss, error fetching balai point:", error);
     }
   }, []);
 
@@ -30,16 +30,14 @@ const App = () => {
         addBalaiLayer(response);
       }
     } catch (error) {
-      console.error("Error fetching Balai data:", error);
+      console.error("Upss, error fetching balai area:", error);
     }
   }, []);
 
   useEffect(() => {
     mapRef.current = new maplibregl.Map({
       container: mapContainerRef.current,
-      // style:
-      //   "https://api.maptiler.com/maps/openstreetmap/style.json?key=AW8IuG306IIk8kNdxEw6", // => open street map
-      style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json", // => light from carto
+      style: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
       center: [117.98723409125382, -3.1933697260734784],
       zoom: 5,
       attributionControl: false,
@@ -93,7 +91,6 @@ const App = () => {
         generateColor(id),
       ]);
 
-      // perbarui warna area balai dengan filter id
       map.setPaintProperty("balai-layer", "fill-color", [
         "match",
         ["get", "id_balai"],
@@ -117,103 +114,9 @@ const App = () => {
     });
 
     map.on("mouseleave", "balai-info-layer", () => {
-      map.getCanvas().style.cursor = "";
+      map.getCanvas().style.cursor = "-";
     });
   };
-
-  // const addBalaiInfoLayer = (geojsonData) => {
-  //   const map = mapRef.current;
-
-  //   if (!map || !geojsonData) return;
-
-  //   // Load ikon custom sebelum menambahkan layer
-  //   map.loadImage(
-  //     `${window.location.origin}/location_survey.png`,
-  //     (error, image) => {
-  //       if (error) {
-  //         console.error("Error loading custom marker image:", error);
-  //         return;
-  //       }
-  //       console.log("custom marker imaage loaded successfully", image);
-
-  //       // Tambahkan gambar sebagai ikon di peta jika belum ada
-  //       if (!map.hasImage("custom-marker")) {
-  //         map.addImage("custom-marker", image);
-  //         console.log("custom marker image added to map");
-  //       }
-
-  //       // Tambahkan sumber data GeoJSON
-  //       if (!map.getSource("balai-info")) {
-  //         map.addSource("balai-info", {
-  //           type: "geojson",
-  //           data: geojsonData,
-  //         });
-  //         console.log("geojson source added", geojsonData);
-
-  //       }
-
-  //       // Tambahkan layer simbol untuk mengganti circle dengan ikon custom
-  //       if (!map.getLayer("balai-info-layer")) {
-  //         map.addLayer({
-  //           id: "balai-info-layer",
-  //           type: "symbol",
-  //           source: "balai-info",
-  //           layout: {
-  //             "icon-image": "custom-marker", // Gunakan ikon yang telah dimuat
-  //             "icon-size": 10, // Sesuaikan ukuran ikon
-  //             "icon-anchor": "bottom",
-  //           },
-  //         });
-
-  //       }
-  //     }
-  //   );
-
-  //   // Tambahkan interaksi klik pada marker
-  //   map.on("click", "balai-info-layer", (e) => {
-  //     const balaiId = e.features[0].properties.id_balai;
-  //     setSelectedBalai(balaiId);
-
-  //     const uniqueBalaiIds = Array.from(
-  //       new Set(
-  //         geojsonData.features.map((feature) => feature.properties.id_balai)
-  //       )
-  //     );
-
-  //     const uniqueBalaiIdsFiltered = uniqueBalaiIds.filter(
-  //       (id) => id !== balaiId
-  //     );
-  //     const colorMapping = uniqueBalaiIdsFiltered.flatMap((id) => [
-  //       id,
-  //       generateColor(id),
-  //     ]);
-
-  //     map.setPaintProperty("balai-layer", "fill-color", [
-  //       "match",
-  //       ["get", "id_balai"],
-  //       balaiId,
-  //       "#FF4545",
-  //       ...colorMapping,
-  //       "#cccccc",
-  //     ]);
-
-  //     new maplibregl.Popup()
-  //       .setLngLat(e.lngLat)
-  //       .setHTML(
-  //         `<h3 style="margin: 0; font-size: 16px;">Peringatan</h3>
-  //         <p style="margin: 5px 0;">Anda telah memilih balai dengan ID: <strong>${balaiId}</strong></p>`
-  //       )
-  //       .addTo(map);
-  //   });
-
-  //   map.on("mouseenter", "balai-info-layer", () => {
-  //     map.getCanvas().style.cursor = "pointer";
-  //   });
-
-  //   map.on("mouseleave", "balai-info-layer", () => {
-  //     map.getCanvas().style.cursor = "";
-  //   });
-  // };
 
   const addBalaiLayer = (geojsonData) => {
     const map = mapRef.current;
@@ -242,7 +145,7 @@ const App = () => {
           ...uniqueBalaiIds.flatMap((id) => [id, generateColor(id)]),
           "#cccccc",
         ],
-        "fill-opacity": 0.8, //0.6
+        "fill-opacity": 0.6,
       },
     });
 

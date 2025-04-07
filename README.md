@@ -1,8 +1,17 @@
-# React + Vite
+![dashboard](public/dashboard.gif)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Dashboard webgis
 
-Currently, two official plugins are available:
+This repository is used to display area and location data, with a main feature that allows users to focus on a selected area by changing its color.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Data requirements
+
+- Vektor locations
+- Vektor areas
+- OSM tiles
+
+## Technology
+
+- React.js
+- Tailwind.css
+- Geoserver
